@@ -6,11 +6,9 @@ module OmniAuth
     class Spotify < OmniAuth::Strategies::OAuth2
       # Give your strategy a name.
       option :name, 'spotify'
-      
+
       FORCE_APPROVAL_KEY = 'ommiauth_spotify_force_approval?'.freeze
 
-      # This is where you pass the options you would pass when
-      # initializing your consumer from the OAuth gem.
       option :client_options, {
         :site          => 'https://api.spotify.com/v1',
         :authorize_url => 'https://accounts.spotify.com/authorize',
@@ -59,7 +57,7 @@ module OmniAuth
       def raw_info
         @raw_info ||= access_token.get('me').parsed
       end
-      
+
       def authorize_params
         super.tap do |params|
           if session.delete(FORCE_APPROVAL_KEY) ||
@@ -69,22 +67,8 @@ module OmniAuth
         end
       end
 
-      def request_phase
-        %w[show_dialog].each do |v|
-          if request.params[v]
-            options[:authorize_params][v.to_sym] = request.params[v]
-          end
-        end
-        super
-      end
-
       def callback_url
-        if @authorization_code_from_signed_request_in_cookie
-          ''
-        else
-          # Fixes regression in omniauth-oauth2 v1.4.0 by https://github.com/intridea/omniauth-oauth2/commit/85fdbe117c2a4400d001a6368cc359d88f40abc7
-          options[:callback_url] || (full_host + script_name + callback_path)
-        end
+        options[:redirect_uri] || (full_host + script_name + callback_path)
       end
     end
   end
